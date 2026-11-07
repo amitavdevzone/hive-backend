@@ -2,7 +2,9 @@
 
 namespace App\Data;
 
-readonly class UserTeam
+use Spatie\LaravelData\Data;
+
+class UserTeam extends Data
 {
     public function __construct(
         public int $id,
@@ -12,7 +14,5 @@ readonly class UserTeam
         public ?string $role,
         public ?string $roleLabel,
         public ?bool $isCurrent = null,
-    ) {
-        //
-    }
+    ) {}
 }

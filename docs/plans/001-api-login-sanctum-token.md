@@ -11,13 +11,13 @@ Review and confirm after each slice.
 | [x]  | 1                            | Create `LoginRequest` (`email` required/email, `password` required/string)                                                                                                                 |
 | [x]  | 1                            | Create `LoginTokenData` (Spatie Laravel Data)                                                                                                                                              |
 | [x]  | 1                            | Create invokable `Api\LoginController`, register `POST /api/login` in `routes/api.php`                                                                                                     |
-| [ ]  | 1                            | Create Bruno collection in `docs/bruno/` (base URL env var, login request, token pushed to global var, collection-level bearer auth)                                                       |
-| [ ]  | 1                            | Tests: AC-1 (`tests/Feature/Api/LoginTest.php`)                                                                                                                                            |
-| [ ]  | 2 — Generic failures & abuse | Single failure path: unknown email / wrong password / unverified all raise the same `ValidationException`                                                                                  |
-| [ ]  | 2                            | Add `throttle:6,1` to the login route                                                                                                                                                      |
-| [ ]  | 2                            | Tests: AC-3, AC-4, AC-5, AC-6, AC-7                                                                                                                                                        |
-| [ ]  | 3 — Existing DTOs            | Convert `app/Data/UserTeam.php` and `app/Data/TeamPermissions.php` to extend Spatie `Data`; fix call sites                                                                                 |
-| [ ]  | 3                            | Tests: AC-8 (run existing team/Inertia tests)                                                                                                                                              |
+| [x]  | 1                            | Create Bruno collection in `docs/bruno/` (base URL env var, login request, token pushed to global var, collection-level bearer auth)                                                       |
+| [x]  | 1                            | Tests: AC-1 (`tests/Feature/Api/LoginTest.php`)                                                                                                                                            |
+| [x]  | 2 — Generic failures & abuse | Single failure path: unknown email / wrong password / unverified all raise the same `ValidationException`                                                                                  |
+| [x]  | 2                            | Add `throttle:6,1` to the login route                                                                                                                                                      |
+| [x]  | 2                            | Tests: AC-3, AC-4, AC-5, AC-6, AC-7                                                                                                                                                        |
+| [x]  | 3 — Existing DTOs            | Convert `app/Data/UserTeam.php` and `app/Data/TeamPermissions.php` to extend Spatie `Data`; fix call sites                                                                                 |
+| [x]  | 3                            | Tests: AC-8 (run existing team/Inertia tests)                                                                                                                                              |
 
 ## Acceptance criteria
 
@@ -45,7 +45,7 @@ The repo has no git remote, so no ticket can be created yet; the title stays `GH
 3. **Route.** `POST /api/login`, unversioned (user's choice; overrides the `http-routes.md` default of API versioning). Single-action `App\Http\Controllers\Api\LoginController`; validation in `App\Http\Requests\Api\LoginRequest`.
 4. **One generic failure.** Unknown email, wrong password and unverified user all throw `ValidationException::withMessages(['email' => 'These credentials are incorrect.'])` → 422. Same message and status in every case so account existence is not revealed. No dummy hash check: a missing user fails immediately.
 5. **Throttling.** `throttle:6,1` on the route (matches existing `user-password.update` convention).
-6. **Success DTO.** `App\Data\LoginTokenData extends Spatie\LaravelData\Data` with `accessToken` and `tokenType` (`'Bearer'`), output keys mapped to snake_case via `#[MapOutputName(SnakeCaseMapper::class)]`. Returned directly from the controller (Data is Responsable). Token: `$user->createToken('api')->plainTextToken`.
+6. **Success DTO.** `App\Data\LoginTokenData extends Spatie\LaravelData\Data` with `accessToken` and `tokenType` (`'Bearer'`), output keys mapped to snake_case via `#[MapOutputName(SnakeCaseMapper::class)]`. Returned from the controller via `response()->json($data->toArray())`, because Data answers POST requests with 201 and AC-1 expects 200. Token: `$user->createToken('api')->plainTextToken`.
 7. **All DTOs on Laravel Data.** New DTOs extend `Data`; the two existing plain `readonly` classes in `app/Data` are converted in slice 3.
 8. **Bruno collection** in `docs/bruno/`: `bruno.json`; `collection.bru` with bearer auth `{{accessToken}}`; `environments/local.bru` with `baseUrl`; `login.bru` calling `{{baseUrl}}/api/login` with a post-response script `bru.setGlobalEnvVar("accessToken", res.body.access_token)`. The user must have a Global Environment selected in Bruno for the global variable to persist. The `bru` CLI is not installed, so this is verified manually (AC-2).
 
@@ -53,7 +53,7 @@ The repo has no git remote, so no ticket can be created yet; the title stays `GH
 
 ```php
 // app/Http/Controllers/Api/LoginController.php
-public function __invoke(LoginRequest $request): LoginTokenData
+public function __invoke(LoginRequest $request): JsonResponse
 {
     $user = User::query()->where('email', $request->validated('email'))->first();
 
@@ -61,7 +61,7 @@ public function __invoke(LoginRequest $request): LoginTokenData
         throw ValidationException::withMessages(['email' => 'These credentials are incorrect.']);
     }
 
-    return new LoginTokenData($user->createToken('api')->plainTextToken);
+    return response()->json((new LoginTokenData($user->createToken('api')->plainTextToken))->toArray());
 }
 ```
 
