@@ -10,10 +10,10 @@ Review and confirm after each slice.
 | [x]  | 1                            | Add `HasApiTokens` to `app/Models/User.php`                                                                                                                                                |
 | [x]  | 1                            | Create `LoginRequest` (`email` required/email, `password` required/string)                                                                                                                 |
 | [x]  | 1                            | Create `LoginTokenData` (Spatie Laravel Data)                                                                                                                                              |
-| [ ]  | 1                            | Create invokable `Api\LoginController`, register `POST /api/login` in `routes/api.php`                                                                                                     |
+| [x]  | 1                            | Create invokable `Api\LoginController`, register `POST /api/login` in `routes/api.php`                                                                                                     |
 | [ ]  | 1                            | Create Bruno collection in `docs/bruno/` (base URL env var, login request, token pushed to global var, collection-level bearer auth)                                                       |
 | [ ]  | 1                            | Tests: AC-1 (`tests/Feature/Api/LoginTest.php`)                                                                                                                                            |
-| [ ]  | 2 — Generic failures & abuse | Single failure path: unknown email / wrong password / unverified all raise the same `ValidationException`; dummy hash check when user missing                                              |
+| [ ]  | 2 — Generic failures & abuse | Single failure path: unknown email / wrong password / unverified all raise the same `ValidationException`                                                                                  |
 | [ ]  | 2                            | Add `throttle:6,1` to the login route                                                                                                                                                      |
 | [ ]  | 2                            | Tests: AC-3, AC-4, AC-5, AC-6, AC-7                                                                                                                                                        |
 | [ ]  | 3 — Existing DTOs            | Convert `app/Data/UserTeam.php` and `app/Data/TeamPermissions.php` to extend Spatie `Data`; fix call sites                                                                                 |
@@ -43,7 +43,7 @@ The repo has no git remote, so no ticket can be created yet; the title stays `GH
 1. **Dependencies.** Add `laravel/sanctum` (via `php artisan install:api`) and `spatie/laravel-data`. Both were explicitly requested, which covers the "no new dependencies without approval" rule.
 2. **"Active" = `email_verified_at` is not null.** No migration. Chosen over a new `is_active` column to keep the change small; revisit if accounts need suspending independent of verification.
 3. **Route.** `POST /api/login`, unversioned (user's choice; overrides the `http-routes.md` default of API versioning). Single-action `App\Http\Controllers\Api\LoginController`; validation in `App\Http\Requests\Api\LoginRequest`.
-4. **One generic failure.** Unknown email, wrong password and unverified user all throw `ValidationException::withMessages(['email' => 'These credentials are incorrect.'])` → 422. Same message and status in every case so account existence is not revealed. When the user is not found, run a dummy `Hash::check` so response time does not leak existence.
+4. **One generic failure.** Unknown email, wrong password and unverified user all throw `ValidationException::withMessages(['email' => 'These credentials are incorrect.'])` → 422. Same message and status in every case so account existence is not revealed. No dummy hash check: a missing user fails immediately.
 5. **Throttling.** `throttle:6,1` on the route (matches existing `user-password.update` convention).
 6. **Success DTO.** `App\Data\LoginTokenData extends Spatie\LaravelData\Data` with `accessToken` and `tokenType` (`'Bearer'`), output keys mapped to snake_case via `#[MapOutputName(SnakeCaseMapper::class)]`. Returned directly from the controller (Data is Responsable). Token: `$user->createToken('api')->plainTextToken`.
 7. **All DTOs on Laravel Data.** New DTOs extend `Data`; the two existing plain `readonly` classes in `app/Data` are converted in slice 3.
@@ -57,9 +57,7 @@ public function __invoke(LoginRequest $request): LoginTokenData
 {
     $user = User::query()->where('email', $request->validated('email'))->first();
 
-    $passwordMatches = Hash::check($request->validated('password'), $user?->password ?? self::DUMMY_HASH);
-
-    if (! $user || ! $passwordMatches || $user->email_verified_at === null) {
+    if (! $user || ! Hash::check($request->validated('password'), $user->password) || $user->email_verified_at === null) {
         throw ValidationException::withMessages(['email' => 'These credentials are incorrect.']);
     }
 
