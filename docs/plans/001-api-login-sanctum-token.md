@@ -4,33 +4,33 @@
 
 Review and confirm after each slice.
 
-| Done | Slice | Step |
-| ---- | ----- | ---- |
-| [x] | 1 — Happy-path login | Run `php artisan install:api --no-interaction` (Sanctum, `routes/api.php`, `personal_access_tokens` migration, `bootstrap/app.php` api routing) and `composer require spatie/laravel-data` |
-| [x] | 1 | Add `HasApiTokens` to `app/Models/User.php` |
-| [x] | 1 | Create `LoginRequest` (`email` required/email, `password` required/string) |
-| [ ] | 1 | Create `LoginTokenData` (Spatie Laravel Data) |
-| [ ] | 1 | Create invokable `Api\LoginController`, register `POST /api/login` in `routes/api.php` |
-| [ ] | 1 | Create Bruno collection in `docs/bruno/` (base URL env var, login request, token pushed to global var, collection-level bearer auth) |
-| [ ] | 1 | Tests: AC-1 (`tests/Feature/Api/LoginTest.php`) |
-| [ ] | 2 — Generic failures & abuse | Single failure path: unknown email / wrong password / unverified all raise the same `ValidationException`; dummy hash check when user missing |
-| [ ] | 2 | Add `throttle:6,1` to the login route |
-| [ ] | 2 | Tests: AC-3, AC-4, AC-5, AC-6, AC-7 |
-| [ ] | 3 — Existing DTOs | Convert `app/Data/UserTeam.php` and `app/Data/TeamPermissions.php` to extend Spatie `Data`; fix call sites |
-| [ ] | 3 | Tests: AC-8 (run existing team/Inertia tests) |
+| Done | Slice                        | Step                                                                                                                                                                                       |
+| ---- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [x]  | 1 — Happy-path login         | Run `php artisan install:api --no-interaction` (Sanctum, `routes/api.php`, `personal_access_tokens` migration, `bootstrap/app.php` api routing) and `composer require spatie/laravel-data` |
+| [x]  | 1                            | Add `HasApiTokens` to `app/Models/User.php`                                                                                                                                                |
+| [x]  | 1                            | Create `LoginRequest` (`email` required/email, `password` required/string)                                                                                                                 |
+| [x]  | 1                            | Create `LoginTokenData` (Spatie Laravel Data)                                                                                                                                              |
+| [ ]  | 1                            | Create invokable `Api\LoginController`, register `POST /api/login` in `routes/api.php`                                                                                                     |
+| [ ]  | 1                            | Create Bruno collection in `docs/bruno/` (base URL env var, login request, token pushed to global var, collection-level bearer auth)                                                       |
+| [ ]  | 1                            | Tests: AC-1 (`tests/Feature/Api/LoginTest.php`)                                                                                                                                            |
+| [ ]  | 2 — Generic failures & abuse | Single failure path: unknown email / wrong password / unverified all raise the same `ValidationException`; dummy hash check when user missing                                              |
+| [ ]  | 2                            | Add `throttle:6,1` to the login route                                                                                                                                                      |
+| [ ]  | 2                            | Tests: AC-3, AC-4, AC-5, AC-6, AC-7                                                                                                                                                        |
+| [ ]  | 3 — Existing DTOs            | Convert `app/Data/UserTeam.php` and `app/Data/TeamPermissions.php` to extend Spatie `Data`; fix call sites                                                                                 |
+| [ ]  | 3                            | Tests: AC-8 (run existing team/Inertia tests)                                                                                                                                              |
 
 ## Acceptance criteria
 
-| ID   | Acceptance criterion | Test slice | Planned test |
-| ---- | -------------------- | ---------- | ------------ |
+| ID   | Acceptance criterion                                                                                                                 | Test slice           | Planned test                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | ------------------------------------------------------------------------ |
 | AC-1 | A verified user posting correct email + password gets 200 with `access_token` and `token_type`, and a token row exists for that user | 1 — Happy-path login | Feature: `Api/LoginTest` "returns a sanctum token for valid credentials" |
-| AC-2 | In Bruno, running `login` stores the token in a global variable and other collection requests send it as a bearer token | 1 — Happy-path login | Manual |
-| AC-3 | An email that does not exist returns 422 with the generic "credentials are wrong" message | 2 — Generic failures | Feature: `Api/LoginTest` "rejects unknown email" |
-| AC-4 | A wrong password returns the identical message and status as AC-3 | 2 — Generic failures | Feature: `Api/LoginTest` "rejects wrong password with the same message" |
-| AC-5 | A user with correct password but unverified email (inactive) returns the identical message and no token is created | 2 — Generic failures | Feature: `Api/LoginTest` "rejects unverified user" |
-| AC-6 | Missing or malformed email / missing password returns 422 validation errors | 2 — Generic failures | Feature: `Api/LoginTest` dataset "validates input" |
-| AC-7 | Repeated attempts beyond the limit return 429 | 2 — Generic failures | Feature: `Api/LoginTest` "throttles login attempts" |
-| AC-8 | Existing pages using `UserTeam` / `TeamPermissions` still work after converting them to Laravel Data | 3 — Existing DTOs | Existing team feature tests |
+| AC-2 | In Bruno, running `login` stores the token in a global variable and other collection requests send it as a bearer token              | 1 — Happy-path login | Manual                                                                   |
+| AC-3 | An email that does not exist returns 422 with the generic "credentials are wrong" message                                            | 2 — Generic failures | Feature: `Api/LoginTest` "rejects unknown email"                         |
+| AC-4 | A wrong password returns the identical message and status as AC-3                                                                    | 2 — Generic failures | Feature: `Api/LoginTest` "rejects wrong password with the same message"  |
+| AC-5 | A user with correct password but unverified email (inactive) returns the identical message and no token is created                   | 2 — Generic failures | Feature: `Api/LoginTest` "rejects unverified user"                       |
+| AC-6 | Missing or malformed email / missing password returns 422 validation errors                                                          | 2 — Generic failures | Feature: `Api/LoginTest` dataset "validates input"                       |
+| AC-7 | Repeated attempts beyond the limit return 429                                                                                        | 2 — Generic failures | Feature: `Api/LoginTest` "throttles login attempts"                      |
+| AC-8 | Existing pages using `UserTeam` / `TeamPermissions` still work after converting them to Laravel Data                                 | 3 — Existing DTOs    | Existing team feature tests                                              |
 
 ## Context
 
@@ -78,17 +78,17 @@ class LoginTokenData extends Data
 
 ## Files to create/modify
 
-| File | Action |
-| ---- | ------ |
-| `composer.json`, `composer.lock` | Modify (sanctum, laravel-data) |
+| File                                                                                                   | Action                          |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| `composer.json`, `composer.lock`                                                                       | Modify (sanctum, laravel-data)  |
 | `routes/api.php`, `bootstrap/app.php`, `database/migrations/*_create_personal_access_tokens_table.php` | Create/modify via `install:api` |
-| `app/Models/User.php` | Modify (`HasApiTokens`) |
-| `app/Http/Controllers/Api/LoginController.php` | Create |
-| `app/Http/Requests/Api/LoginRequest.php` | Create |
-| `app/Data/LoginTokenData.php` | Create |
-| `app/Data/UserTeam.php`, `app/Data/TeamPermissions.php` | Modify (slice 3) |
-| `tests/Feature/Api/LoginTest.php` | Create |
-| `docs/bruno/bruno.json`, `collection.bru`, `login.bru`, `environments/local.bru` | Create |
+| `app/Models/User.php`                                                                                  | Modify (`HasApiTokens`)         |
+| `app/Http/Controllers/Api/LoginController.php`                                                         | Create                          |
+| `app/Http/Requests/Api/LoginRequest.php`                                                               | Create                          |
+| `app/Data/LoginTokenData.php`                                                                          | Create                          |
+| `app/Data/UserTeam.php`, `app/Data/TeamPermissions.php`                                                | Modify (slice 3)                |
+| `tests/Feature/Api/LoginTest.php`                                                                      | Create                          |
+| `docs/bruno/bruno.json`, `collection.bru`, `login.bru`, `environments/local.bru`                       | Create                          |
 
 ## Testing plan
 
