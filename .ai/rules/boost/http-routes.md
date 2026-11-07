@@ -1,7 +1,7 @@
 ---
 paths:
-  - 'app/Http/**'
-  - 'routes/**'
+    - 'app/Http/**'
+    - 'routes/**'
 ---
 
 ## APIs & Eloquent Resources

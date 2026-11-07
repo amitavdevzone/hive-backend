@@ -1,6 +1,6 @@
 ---
 paths:
-  - 'app/Models/**'
+    - 'app/Models/**'
 ---
 
 ### Model Creation
