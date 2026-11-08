@@ -8,7 +8,7 @@ Review and confirm after each slice.
 | ---- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | [x]  | 1 — Create & list notes     | `php artisan make:model Note -mfs` and `make:model Tag -mf`; migrations for `notes`, `tags`, `note_tag`                                        |
 | [x]  | 1                           | `NoteFormat` enum (`Plain`, `Markdown`); `Note`/`Tag` models (`#[Fillable]`, casts, relations); `User::notes()` and `User::tags()`             |
-| [ ]  | 1                           | `NoteFactory`, `TagFactory`, `NoteSeeder` (called from `DatabaseSeeder`)                                                                       |
+| [x]  | 1                           | `NoteFactory`, `TagFactory`, `NoteSeeder` (called from `DatabaseSeeder`)                                                                       |
 | [ ]  | 1                           | `StoreNoteRequest`; `NoteData` and `TagData` (Spatie Data)                                                                                     |
 | [ ]  | 1                           | `Api\NoteController@store` and `@index` (paginated, own notes only); routes in an `auth:sanctum` group in `routes/api.php`                     |
 | [ ]  | 1                           | Bruno requests: create note, list notes                                                                                                        |

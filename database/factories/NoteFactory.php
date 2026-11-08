@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\NoteFormat;
 use App\Models\Note;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +20,10 @@ class NoteFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(),
+            'title' => fake()->sentence(4),
+            'text' => fake()->paragraphs(2, true),
+            'format' => fake()->randomElement(NoteFormat::cases()),
         ];
     }
 }
