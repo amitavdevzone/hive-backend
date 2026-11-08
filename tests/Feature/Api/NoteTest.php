@@ -107,3 +107,62 @@ test('paginates the list', function () {
         ->assertJsonCount(15, 'data')
         ->assertJsonPath('total', 16);
 });
+
+test('searches title and text case-insensitively', function () {
+    $user = User::factory()->create();
+    $inTitle = Note::factory()->for($user)->create(['title' => 'Nginx config', 'text' => 'x']);
+    $inText = Note::factory()->for($user)->create(['title' => 'y', 'text' => 'Restart NGINX daily']);
+    Note::factory()->for($user)->create(['title' => 'Other', 'text' => 'nothing']);
+    Sanctum::actingAs($user);
+
+    $ids = collect($this->getJson('/api/notes?search=nGiNx')->assertOk()->json('data'))->pluck('id');
+
+    expect($ids->all())->toEqualCanonicalizing([$inTitle->id, $inText->id]);
+});
+
+test('treats like wildcards in search literally', function () {
+    $user = User::factory()->create();
+    $literal = Note::factory()->for($user)->create(['title' => '100% done', 'text' => 'x']);
+    Note::factory()->for($user)->create(['title' => '100 done', 'text' => 'x']);
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/notes?search='.urlencode('100%'))
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $literal->id);
+});
+
+test('filters by tag', function () {
+    $user = User::factory()->create();
+    $tagged = Note::factory()->for($user)->create();
+    $tagged->tags()->attach(Tag::factory()->for($user)->create(['name' => 'server']));
+    Note::factory()->for($user)->create();
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/notes?tag=Server')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $tagged->id);
+});
+
+test('combines search and tag without leaking other users', function () {
+    $user = User::factory()->create();
+    $tag = Tag::factory()->for($user)->create(['name' => 'server']);
+    $match = Note::factory()->for($user)->create(['title' => 'nginx']);
+    Note::factory()->for($user)->create(['title' => 'nginx']);
+    $wrongSearch = Note::factory()->for($user)->create(['title' => 'apache']);
+    $match->tags()->attach($tag);
+    $wrongSearch->tags()->attach($tag);
+
+    $other = User::factory()->create();
+    Note::factory()->for($other)->create(['title' => 'nginx'])
+        ->tags()->attach(Tag::factory()->for($other)->create(['name' => 'server']));
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/notes?search=nginx&tag=server')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $match->id);
+
+    $this->getJson('/api/notes?search=nginx')->assertJsonCount(2, 'data');
+});

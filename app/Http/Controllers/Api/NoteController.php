@@ -6,6 +6,7 @@ use App\Data\NoteData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreNoteRequest;
 use App\Models\Tag;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,15 @@ class NoteController extends Controller
     {
         $notes = $request->user()->notes()
             ->with('tags')
+            ->when($request->string('search')->trim()->toString(), function (Builder $query, string $search): void {
+                $needle = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($search)).'%';
+
+                $query->where(fn (Builder $query) => $query
+                    ->whereRaw("LOWER(title) LIKE ? ESCAPE '!'", [$needle])
+                    ->orWhereRaw("LOWER(text) LIKE ? ESCAPE '!'", [$needle]));
+            })
+            ->when($request->string('tag')->trim()->toString(), fn (Builder $query, string $tag) => $query
+                ->whereHas('tags', fn (Builder $query) => $query->where('name', mb_strtolower($tag))))
             ->latest()
             ->latest('id')
             ->paginate(15)

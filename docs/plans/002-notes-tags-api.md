@@ -13,9 +13,9 @@ Review and confirm after each slice.
 | [x]  | 1                           | `Api\NoteController@store` and `@index` (paginated, own notes only); routes in an `auth:sanctum` group in `routes/api.php`                     |
 | [x]  | 1                           | Bruno requests: create note, list notes                                                                                                        |
 | [x]  | 1                           | Tests: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6 (`tests/Feature/Api/NoteTest.php`)                                                                   |
-| [ ]  | 2 — Search & tag filter     | `index` accepts `search` (case-insensitive LIKE on title and text) and `tag` (tag name); filters combine with AND                              |
-| [ ]  | 2                           | Bruno requests: search notes, notes by tag                                                                                                     |
-| [ ]  | 2                           | Tests: AC-7, AC-8, AC-9                                                                                                                        |
+| [x]  | 2 — Search & tag filter     | `index` accepts `search` (case-insensitive LIKE on title and text) and `tag` (tag name); filters combine with AND                              |
+| [x]  | 2                           | Bruno requests: search notes, notes by tag                                                                                                     |
+| [x]  | 2                           | Tests: AC-7, AC-8, AC-9                                                                                                                        |
 | [ ]  | 3 — View, edit, delete      | `NotePolicy`; `NoteController@show`, `@update` (`UpdateNoteRequest`, tags still mandatory), `@destroy`                                         |
 | [ ]  | 3                           | Bruno requests: show, update, delete                                                                                                           |
 | [ ]  | 3                           | Tests: AC-10, AC-11, AC-12, AC-13                                                                                                              |
