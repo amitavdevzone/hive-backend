@@ -12,5 +12,5 @@ Route::get('/user', function (Request $request) {
 Route::post('/login', LoginController::class)->middleware('throttle:6,1');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('notes', NoteController::class)->only(['index', 'store']);
+    Route::apiResource('notes', NoteController::class);
 });

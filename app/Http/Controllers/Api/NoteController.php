@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Data\NoteData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreNoteRequest;
+use App\Http\Requests\Api\UpdateNoteRequest;
+use App\Models\Note;
 use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 
 class NoteController extends Controller
 {
@@ -39,11 +44,45 @@ class NoteController extends Controller
 
         $note = $user->notes()->create($request->safe()->only(['title', 'text', 'format']));
 
-        $note->tags()->sync(
-            $request->safe()->collect('tags')
-                ->map(fn (string $name): int => Tag::query()->firstOrCreate(['user_id' => $user->id, 'name' => $name])->id)
-        );
+        $this->syncTags($note, $user, $request->safe()->collect('tags')->all());
 
         return response()->json(NoteData::fromModel($note->load('tags')), 201);
+    }
+
+    public function show(Note $note): JsonResponse
+    {
+        Gate::authorize('view', $note);
+
+        return response()->json(NoteData::fromModel($note->load('tags')));
+    }
+
+    public function update(UpdateNoteRequest $request, Note $note): JsonResponse
+    {
+        Gate::authorize('update', $note);
+
+        $note->update($request->safe()->only(['title', 'text', 'format']));
+
+        $this->syncTags($note, $request->user(), $request->safe()->collect('tags')->all());
+
+        return response()->json(NoteData::fromModel($note->load('tags')));
+    }
+
+    public function destroy(Note $note): Response
+    {
+        Gate::authorize('delete', $note);
+
+        $note->delete();
+
+        return response()->noContent();
+    }
+
+    /**
+     * @param  array<int, string>  $names
+     */
+    private function syncTags(Note $note, User $user, array $names): void
+    {
+        $note->tags()->sync(
+            collect($names)->map(fn (string $name): int => Tag::query()->firstOrCreate(['user_id' => $user->id, 'name' => $name])->id)
+        );
     }
 }

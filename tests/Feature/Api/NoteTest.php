@@ -20,6 +20,9 @@ test('rejects guests', function (string $method, string $uri) {
 })->with([
     'index' => ['GET', '/api/notes'],
     'store' => ['POST', '/api/notes'],
+    'show' => ['GET', '/api/notes/1'],
+    'update' => ['PUT', '/api/notes/1'],
+    'destroy' => ['DELETE', '/api/notes/1'],
 ]);
 
 test('creates a note with tags', function () {
@@ -165,4 +168,70 @@ test('combines search and tag without leaking other users', function () {
         ->assertJsonPath('data.0.id', $match->id);
 
     $this->getJson('/api/notes?search=nginx')->assertJsonCount(2, 'data');
+});
+
+test('shows own note and forbids others', function () {
+    $user = User::factory()->create();
+    $note = Note::factory()->for($user)->create();
+    $note->tags()->attach(Tag::factory()->for($user)->create(['name' => 'office']));
+
+    Sanctum::actingAs($user);
+    $this->getJson("/api/notes/{$note->id}")
+        ->assertOk()
+        ->assertJsonPath('id', $note->id)
+        ->assertJsonPath('tags.0.name', 'office');
+
+    Sanctum::actingAs(User::factory()->create());
+    $this->getJson("/api/notes/{$note->id}")->assertForbidden();
+});
+
+test('updates a note and replaces its tags', function () {
+    $user = User::factory()->create();
+    $note = Note::factory()->for($user)->create(['format' => 'plain']);
+    $note->tags()->attach(Tag::factory()->for($user)->create(['name' => 'old']));
+    Sanctum::actingAs($user);
+
+    $this->putJson("/api/notes/{$note->id}", validNotePayload(['title' => 'New title', 'tags' => ['fresh']]))
+        ->assertOk()
+        ->assertJsonPath('title', 'New title')
+        ->assertJsonPath('format', 'markdown')
+        ->assertJsonCount(1, 'tags')
+        ->assertJsonPath('tags.0.name', 'fresh');
+
+    expect($note->fresh()->tags->pluck('name')->all())->toBe(['fresh']);
+});
+
+test('forbids updating another user\'s note', function () {
+    $note = Note::factory()->create(['title' => 'Original']);
+    Sanctum::actingAs(User::factory()->create());
+
+    $this->putJson("/api/notes/{$note->id}", validNotePayload())->assertForbidden();
+
+    expect($note->fresh()->title)->toBe('Original');
+});
+
+test('requires tags on update', function (array $overrides) {
+    $user = User::factory()->create();
+    $note = Note::factory()->for($user)->create();
+    Sanctum::actingAs($user);
+
+    $this->putJson("/api/notes/{$note->id}", validNotePayload($overrides))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('tags');
+})->with([
+    'missing' => [['tags' => null]],
+    'empty' => [['tags' => []]],
+]);
+
+test('deletes own note and forbids others', function () {
+    $user = User::factory()->create();
+    $note = Note::factory()->for($user)->create();
+
+    Sanctum::actingAs(User::factory()->create());
+    $this->deleteJson("/api/notes/{$note->id}")->assertForbidden();
+    expect(Note::query()->whereKey($note->id)->exists())->toBeTrue();
+
+    Sanctum::actingAs($user);
+    $this->deleteJson("/api/notes/{$note->id}")->assertNoContent();
+    expect(Note::query()->whereKey($note->id)->exists())->toBeFalse();
 });
