@@ -4,6 +4,7 @@ paths:
     - 'routes/**'
 ---
 
-## APIs & Eloquent Resources
+## APIs & Spatie Data
 
-- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
+- API responses use Spatie Laravel Data classes (`app/Data`, snake_case output via `SnakeCaseMapper`), not Eloquent API Resources.
+- API routes stay unversioned (no `/v1` prefix), matching the existing routes in `routes/api.php`.

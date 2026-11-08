@@ -19,8 +19,8 @@ Review and confirm after each slice.
 | [x]  | 3 — View, edit, delete      | `NotePolicy`; `NoteController@show`, `@update` (`UpdateNoteRequest`, tags still mandatory), `@destroy`                                         |
 | [x]  | 3                           | Bruno requests: show, update, delete                                                                                                           |
 | [x]  | 3                           | Tests: AC-10, AC-11, AC-12, AC-13                                                                                                              |
-| [ ]  | 4 — Tags list & rule update | `Api\TagController@index` (own tags); update `.ai/rules/boost/http-routes.md` to say API responses use Spatie Data and routes stay unversioned |
-| [ ]  | 4                           | Bruno request: list tags                                                                                                                       |
+| [x]  | 4 — Tags list & rule update | `Api\TagController@index` (own tags); update `.ai/rules/boost/http-routes.md` to say API responses use Spatie Data and routes stay unversioned |
+| [x]  | 4                           | Bruno request: list tags                                                                                                                       |
 | [ ]  | 4                           | Tests: AC-14                                                                                                                                   |
 
 ## Acceptance criteria

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\TagController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,4 +14,5 @@ Route::post('/login', LoginController::class)->middleware('throttle:6,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('notes', NoteController::class);
+    Route::get('tags', [TagController::class, 'index'])->name('tags.index');
 });
