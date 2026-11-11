@@ -11,7 +11,7 @@ Review and confirm after each slice.
 | [x]  | 1                              | `ReminderFactory` (states `once()`, `recurring()`, `inactive()`), `ReminderSeeder` (called from `DatabaseSeeder`)                                        |
 | [x]  | 1                              | `StoreReminderRequest`; `ReminderData` (Spatie Data)                                                                                                     |
 | [x]  | 1                              | `Api\ReminderController@store` and `@index` (own reminders, paginated, optional `active` filter); `apiResource('reminders')` in the `auth:sanctum` group |
-| [ ]  | 1                              | Bruno requests: create once, create recurring, list reminders                                                                                            |
+| [x]  | 1                              | Bruno requests: create once, create recurring, list reminders                                                                                            |
 | [ ]  | 1                              | Tests: AC-1 to AC-7 (`tests/Feature/Api/ReminderTest.php`)                                                                                               |
 | [ ]  | 2 — View, edit, toggle, delete | `ReminderPolicy`; `@show`, `@update` (`UpdateReminderRequest`; `is_active` toggles), `@destroy`                                                          |
 | [ ]  | 2                              | Bruno requests: show, update, deactivate, delete                                                                                                         |
