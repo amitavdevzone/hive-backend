@@ -9,8 +9,8 @@ Review and confirm after each slice.
 | [x]  | 1 — Create & list reminders    | `php artisan make:model Reminder -mfs`; migration for `reminders`                                                                                        |
 | [x]  | 1                              | `ReminderType` enum (`Once`, `Recurring`); `Reminder` model (`#[Fillable]`, casts, `user()`); `User::reminders()`                                        |
 | [x]  | 1                              | `ReminderFactory` (states `once()`, `recurring()`, `inactive()`), `ReminderSeeder` (called from `DatabaseSeeder`)                                        |
-| [ ]  | 1                              | `StoreReminderRequest`; `ReminderData` (Spatie Data)                                                                                                     |
-| [ ]  | 1                              | `Api\ReminderController@store` and `@index` (own reminders, paginated, optional `active` filter); `apiResource('reminders')` in the `auth:sanctum` group |
+| [x]  | 1                              | `StoreReminderRequest`; `ReminderData` (Spatie Data)                                                                                                     |
+| [x]  | 1                              | `Api\ReminderController@store` and `@index` (own reminders, paginated, optional `active` filter); `apiResource('reminders')` in the `auth:sanctum` group |
 | [ ]  | 1                              | Bruno requests: create once, create recurring, list reminders                                                                                            |
 | [ ]  | 1                              | Tests: AC-1 to AC-7 (`tests/Feature/Api/ReminderTest.php`)                                                                                               |
 | [ ]  | 2 — View, edit, toggle, delete | `ReminderPolicy`; `@show`, `@update` (`UpdateReminderRequest`; `is_active` toggles), `@destroy`                                                          |
