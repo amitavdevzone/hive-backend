@@ -19,6 +19,9 @@ test('rejects guests', function (string $method, string $uri) {
 })->with([
     'index' => ['GET', '/api/reminders'],
     'store' => ['POST', '/api/reminders'],
+    'show' => ['GET', '/api/reminders/1'],
+    'update' => ['PUT', '/api/reminders/1'],
+    'destroy' => ['DELETE', '/api/reminders/1'],
 ]);
 
 test('creates a one-time reminder', function () {
@@ -107,4 +110,89 @@ test('filters active reminders', function () {
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $active->id);
+});
+
+test('shows own reminder and forbids others', function () {
+    $user = User::factory()->create();
+    $reminder = Reminder::factory()->for($user)->create();
+
+    Sanctum::actingAs($user);
+    $this->getJson("/api/reminders/{$reminder->id}")
+        ->assertOk()
+        ->assertJsonPath('id', $reminder->id);
+
+    Sanctum::actingAs(User::factory()->create());
+    $this->getJson("/api/reminders/{$reminder->id}")->assertForbidden();
+});
+
+test('updates a reminder partially', function () {
+    $user = User::factory()->create();
+    $reminder = Reminder::factory()->for($user)->recurring()->create(['interval_minutes' => 30]);
+    Sanctum::actingAs($user);
+
+    $this->putJson("/api/reminders/{$reminder->id}", ['title' => 'Renamed'])
+        ->assertOk()
+        ->assertJsonPath('title', 'Renamed')
+        ->assertJsonPath('interval_minutes', 30);
+
+    $this->patchJson("/api/reminders/{$reminder->id}", ['interval_minutes' => 45])->assertOk();
+
+    expect($reminder->fresh())->title->toBe('Renamed')->interval_minutes->toBe(45);
+});
+
+test('changes type and clears the old field', function () {
+    $user = User::factory()->create();
+    $reminder = Reminder::factory()->for($user)->recurring()->create();
+    Sanctum::actingAs($user);
+
+    $this->putJson("/api/reminders/{$reminder->id}", ['type' => 'once', 'remind_at' => '2026-12-01T14:00:00Z'])
+        ->assertOk()
+        ->assertJsonPath('type', 'once')
+        ->assertJsonPath('interval_minutes', null);
+
+    expect($reminder->fresh()->interval_minutes)->toBeNull();
+});
+
+test('requires the matching field on type change', function (array $payload, string $field) {
+    $user = User::factory()->create();
+    $reminder = Reminder::factory()->for($user)->recurring()->create();
+    Sanctum::actingAs($user);
+
+    $this->putJson("/api/reminders/{$reminder->id}", $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors($field);
+})->with([
+    'once without remind_at' => [['type' => 'once'], 'remind_at'],
+    'interval on stored recurring is invalid' => [['interval_minutes' => 0], 'interval_minutes'],
+    'remind_at on recurring' => [['remind_at' => '2026-12-01T14:00:00Z'], 'remind_at'],
+]);
+
+test('toggles active and forbids others', function () {
+    $user = User::factory()->create();
+    $reminder = Reminder::factory()->for($user)->create();
+
+    Sanctum::actingAs($user);
+    $this->putJson("/api/reminders/{$reminder->id}", ['is_active' => false])
+        ->assertOk()
+        ->assertJsonPath('is_active', false);
+    $this->putJson("/api/reminders/{$reminder->id}", ['is_active' => true])
+        ->assertJsonPath('is_active', true);
+
+    Sanctum::actingAs(User::factory()->create());
+    $this->putJson("/api/reminders/{$reminder->id}", ['is_active' => false])->assertForbidden();
+
+    expect($reminder->fresh()->is_active)->toBeTrue();
+});
+
+test('deletes own reminder and forbids others', function () {
+    $user = User::factory()->create();
+    $reminder = Reminder::factory()->for($user)->create();
+
+    Sanctum::actingAs(User::factory()->create());
+    $this->deleteJson("/api/reminders/{$reminder->id}")->assertForbidden();
+    expect(Reminder::query()->count())->toBe(1);
+
+    Sanctum::actingAs($user);
+    $this->deleteJson("/api/reminders/{$reminder->id}")->assertNoContent();
+    expect(Reminder::query()->count())->toBe(0);
 });

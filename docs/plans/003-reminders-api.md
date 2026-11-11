@@ -14,8 +14,8 @@ Review and confirm after each slice.
 | [x]  | 1                              | Bruno requests: create once, create recurring, list reminders                                                                                            |
 | [x]  | 1                              | Tests: AC-1 to AC-7 (`tests/Feature/Api/ReminderTest.php`)                                                                                               |
 | [x]  | 2 — View, edit, toggle, delete | `ReminderPolicy`; `@show`, `@update` (`UpdateReminderRequest`; `is_active` toggles), `@destroy`                                                          |
-| [ ]  | 2                              | Bruno requests: show, update, deactivate, delete                                                                                                         |
-| [ ]  | 2                              | Tests: AC-8 to AC-11                                                                                                                                     |
+| [x]  | 2                              | Bruno requests: show, update, deactivate, delete                                                                                                         |
+| [x]  | 2                              | Tests: AC-8 to AC-11                                                                                                                                     |
 
 ## Acceptance criteria
 
