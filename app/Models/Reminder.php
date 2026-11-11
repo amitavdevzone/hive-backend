@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ReminderType;
 use Database\Factories\ReminderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -49,5 +50,15 @@ class Reminder extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Normalise to UTC, otherwise Laravel drops the client's offset and stores the wall-clock time.
+     *
+     * @return Attribute<Carbon|null, \DateTimeInterface|string|null>
+     */
+    protected function remindAt(): Attribute
+    {
+        return Attribute::set(fn (\DateTimeInterface|string|null $value) => $value === null ? null : Carbon::parse($value)->utc());
     }
 }

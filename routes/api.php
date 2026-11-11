@@ -15,6 +15,6 @@ Route::post('/login', LoginController::class)->middleware('throttle:6,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('notes', NoteController::class);
-    Route::apiResource('reminders', ReminderController::class)->only(['index', 'store']);
+    Route::apiResource('reminders', ReminderController::class);
     Route::get('tags', [TagController::class, 'index'])->name('tags.index');
 });
